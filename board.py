@@ -67,6 +67,7 @@ class Board:
             self.turn = int(input('That is an invalid column please try again: '))
     
     def place_move(self):
+        #testing if it work, Tri Pham
         
             
 
