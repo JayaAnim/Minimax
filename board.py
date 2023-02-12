@@ -50,6 +50,7 @@ class Board:
             #Users turn
             if self.H == 0:
                 self.printBoard()
+                #self.boardEvalutation() Tri Pham
                 self.turn = int(input('Please enter the column (int) for your move: '))
                 self.check_move()
                 self.place_move()
@@ -68,7 +69,28 @@ class Board:
     
     def place_move(self):
         #testing if it work, Tri Pham
+        print("place move")
+
+    #Tri Pham
+    def boardEvalutation(self):
+        #produce board for evaluation
+        mid = self.N//2
+        for i in range(self.N):
+            for j in range(self.N):
+                self.value_board[i][j] = (self.M - abs(i-mid)) + (self.M - abs(j-mid))
         
+        for i in self.value_board:
+            print('+' + '---+' * self.N)
+            index = 1
+            for j in i:
+                print('|' + ' ' + j, end = ' ')
+                if index == self.N:
+                    print('|')
+                else:
+                    index += 1
+        print('+' + '---+' * self.N)
+        
+    
             
 
 
