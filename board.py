@@ -53,10 +53,16 @@ class Board:
                 self.printBoard()
                 self.turn = int(input('Please enter the column (int) for your move: '))
                 self.check_move()
-                self.place_move()
+                self.place_move('x')
+                self.H = 1
             #Computers turn
             elif self.H == 1:
-                print('hi')
+                #testing
+                self.printBoard()
+                self.turn = int(input('Please enter the column (int) for your move: '))
+                self.check_move()
+                self.place_move('o')
+                self.H = 0
             #error
             else:
                 print('User variable H error: ending game')
@@ -67,9 +73,13 @@ class Board:
         while self.turn < 1 or self.turn > self.N or self.board[0][self.turn - 1] != ' ':
             self.turn = int(input('That is an invalid column please try again: '))
     
-    def place_move(self):
-        #testing if it work, Tri Pham
-        print("place move")
+    #testing
+    def place_move(self, spot):
+        i = 0
+        while i < self.N and self.board[i][self.turn] == ' ':
+            i+=1
+
+        self.board[i-1][self.turn] = spot
 
     #make value board
     def boardEvalutation(self):
