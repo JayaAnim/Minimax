@@ -82,7 +82,7 @@ class Board:
     #print value board
     def printEvaluation(self):
         self.boardEvalutation()
-        print("Value board")
+        print("Value board: ")
         for i in self.value_board:
             for g in i:
                 print("{:>3}".format(g), end="")
