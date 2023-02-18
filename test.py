@@ -1,5 +1,3 @@
-"""
-import numpy as np
 import argparse
 from board import Board
 
@@ -14,7 +12,7 @@ def main():
     params = handleParameters(args.N, args.M, args.H)
     board = Board(params[0], params[1], params[2])
     board.createNewBoard()
-    guassian_board = genGaussianBoard(parmas[0])
+
     
     while True:
         if board.H == 0:
@@ -22,10 +20,13 @@ def main():
             move = int(input('Please enter the column (integer) to make your move: '))
             if handleMove(board, move):
                 board.printBoard()
-                handleWin(board.H)
+                handleWin(board.winner)
         elif board.H == 1:
-            board.H = 0
-
+            board.printBoard()
+            move = int(input('Please enter the column (integer) to make your move: '))
+            if handleMove(board, move):
+                board.printBoard()
+                handleWin(board.H)
     
     
 
@@ -73,4 +74,3 @@ def handleWin(H):
 
 if __name__ == '__main__':
     main()
-"""
