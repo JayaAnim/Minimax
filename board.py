@@ -65,12 +65,10 @@ class Board:
             if self.winner == -1:
                 self.winner = self.H
             self.H = self.H ^ 1
-            self.enumBoard()
             return True
         else:
             self.board_cols[move - 1] -= 1
             self.H = self.H ^ 1
-            self.enumBoard()
             return False
 
     def checkWin(self, move) -> bool:
@@ -193,20 +191,69 @@ class Board:
             return False
 
     def enumBoard(self):
+        if self.winner == 1:
+            return 10000
+        elif self.winner == 0:
+            return -10000
+
         rows_adv = self.enumRows()
-        self.enumDiags(rows_adv[4])
+        diags_adv = self.enumDiags(rows_adv[4])
+        cols_adv = self.enumCols()
+
+        print(f'rows comp threats {rows_adv[1]} rows player threats {rows_adv[3]}')
+        print(f'cols comp threats {cols_adv[1]} cols player threats {cols_adv[3]}')
+        print(f'diags comp threats {diags_adv[1]} diags player threats {diags_adv[3]}')
+
+        if self.H == 0 and (rows_adv[3] > 0 or diags_adv[3] > 0 or cols_adv[3] > 0):
+            return -9999
+        elif self.H == 1 and (rows_adv[1] > 0 or diags_adv[1] > 0 or cols_adv[1] > 0):
+            return 9999
+
+        # Get the computer and player advantages for each tuple
+        rows_comp_adv, rows_play_adv = rows_adv[0], rows_adv[2]
+        diags_comp_adv, diags_play_adv = diags_adv[0], diags_adv[2]
+        cols_comp_adv, cols_play_adv = cols_adv[0], cols_adv[2]
+
+        if rows_adv[3] > 0 or diags_adv[3] > 0 or cols_adv[3] > 0:
+            if self.H == 0:
+                rows_play_adv *= 1.25 ** rows_adv[3]
+                diags_play_adv *= 1.25 ** diags_adv[3]
+                cols_play_adv *= 1.25 ** cols_adv[3]
+            else:
+                rows_comp_adv *= 1.25 ** rows_adv[1]
+                diags_comp_adv *= 1.25 ** diags_adv[1]
+                cols_comp_adv *= 1.25 ** cols_adv[1]
+
+        # Calculate total utility with normalized weights
+        total_weight = abs(rows_comp_adv) + abs(rows_play_adv) + abs(diags_comp_adv) + abs(diags_play_adv) + abs(cols_comp_adv) + abs(cols_play_adv)
+        cols_weight = abs(cols_comp_adv) + abs(cols_play_adv)
+        rows_weight = abs(rows_comp_adv) + abs(rows_play_adv)
+        diags_weight = abs(diags_comp_adv) + abs(diags_play_adv)
+
+        if cols_weight == 0:
+            cols_weight = float('inf')
+        if rows_weight == 0:
+            rows_weight = float('inf')
+        if diags_weight == 0:
+            diags_weight = float('inf')
+
+        total_utility = (cols_comp_adv*0.475/cols_weight + rows_comp_adv*0.325/rows_weight + diags_comp_adv*0.2/diags_weight + cols_play_adv*0.475/cols_weight + rows_play_adv*0.325/rows_weight + diags_play_adv*0.2/diags_weight)*total_weight
+
+        #adjust for
+        return total_utility
+
 
     #returns player row advantage, computer row advantage, number of threats each has in the rows, and depth of placed pieces
     #player and computer advantage are calculated using the number of pieces in a row, the number of pieces available to make a win and spatial analysis
     def enumRows(self) -> tuple:
         # computer advantage
         comp_adv = 0
-        # counts number of player threats
-        player_threats = 0
-        # counts number of player pieces in a row
-        player_pieces = 0
+        # counts number of computer threats
+        computer_threats = 0
         # player advantage
         player_adv = 0
+        # counts number of player threats
+        player_threats = 0
         # keeps track of if row is empty
         encountered = False
         # highest row with pieces
@@ -222,10 +269,10 @@ class Board:
             comp_gauss = 0
             # counts player gauss analysis
             player_gauss = 0
-            # counts number of computer threats
-            computer_threats = 0
             # counts number of computer pieces in a row
             computer_pieces = 0
+            # counts number of player pieces in a row
+            player_pieces = 0
 
             # form row_list
             for j in range(self.N):
@@ -287,31 +334,52 @@ class Board:
                 gauss_list.append(comp_gauss)
                 comp_gauss = 0
 
-            # check for threats
+            print(row_list)
+            #count player and computer threats going right
             for k in range(len(row_list)):
                 # if last index do nothing
                 if k == len(row_list) - 1:
                     pass
                 # if second to last index
                 elif k == len(row_list) - 2:
-                    if row_list[k + 1] == 0:
-                        if row_list[k] > 0 and row_list[k] + 1 == self.M:
+                    #check space right threats
+                    if row_list[k] > 0 and row_list[k + 1] == 0:
+                        if row_list[k] + 1 >= self.M:
                             computer_threats += 1
-                        elif row_list[k] < 0 and abs(row_list[k] - 1) == self.M:
-                            player_threats += 1
-                    #check later
-                    elif row_list[k] == 0:
-                        if row_list[k + 1] > 0 and row_list[k + 1] + 1 >= self.M:
-                            computer_threats += 1
-                        elif row_list[k + 1] < 0 and abs(row_list[k + 1] - 1) >= self.M:
+                    elif row_list[k] < 0 and row_list[k + 1] == 0:
+                        if abs(row_list[k]) + 1 >= self.M:
                             player_threats += 1
                 # if not second to last or last index
                 else:
-                    if row_list[k + 1] == 0 and abs(row_list[k] + row_list[k + 2]) >= self.M:
-                        if row_list[k] > 0:
+                    #check space between threats
+                    if row_list[k] > 0 and row_list[k + 2] > 0 and row_list[k + 1] == 0:
+                        if row_list[k] + row_list[k + 2] + 1 >= self.M:
                             computer_threats += 1
-                        else:
+                    elif row_list[k] < 0 and row_list[k + 2] < 0 and row_list[k + 1] == 0:
+                        if abs(row_list[k] + row_list[k + 2]) + 1 >= self.M:
                             player_threats += 1
+                    #check space right threats
+                    elif row_list[k] > 0 and row_list[k + 1] == 0:
+                        if row_list[k] + 1 >= self.M:
+                            computer_threats += 1
+                    elif row_list[k] < 0 and row_list[k + 1] == 0:
+                        if abs(row_list[k]) + 1 >= self.M:
+                            player_threats += 1
+
+            #count player and computer threats going left
+            for k in range(len(row_list) - 1, -1, -1):
+                #if last index
+                if k == 0:
+                    pass
+                #if not last index
+                else:
+                    if row_list[k] > 0 and row_list[k - 1] == 0:
+                        if row_list[k] + 1 >= self.M:
+                            computer_threats += 1
+                    elif row_list[k] < 0 and row_list[k - 1] == 0:
+                        if abs(row_list[k]) + 1 >= self.M:
+                            player_threats += 1
+
 
             # get row enumeration val
             row_enum = self.enumRowHelper(row_list, gauss_list)
@@ -445,8 +513,51 @@ class Board:
         return (comp_adv, comp_threats, player_adv, player_threats)
 
     def enumDiags(self, depth) -> tuple:
-        print(self.enumDiagRight(0, 6))
-        return (0, 0)
+        comp_adv = 0
+        comp_threats = 0
+        player_adv = 0
+        player_threats = 0
+        col_index = 0
+        row_index = depth
+        #depth is row index of highest placed piece
+        #start counting right diag vals at left most column from depth to self.N -2
+        while row_index < self.N - 1:
+            #if piece is in
+            if self.diagsRight(col_index, row_index):
+                result = self.enumDiagRight(col_index, row_index)
+                comp_adv += result[0]
+                comp_threats += result[1]
+                player_adv += result[2]
+                player_threats += result[3]
+            row_index += 1
+        row_index = self.N - 1
+        #start counting right and left diag vals at bottom row
+        while col_index < self.N:
+            if self.diagsRight(col_index, row_index):
+                result = self.enumDiagRight(col_index, row_index)
+                comp_adv += result[0]
+                comp_threats += result[1]
+                player_adv += result[2]
+                player_threats += result[3]
+            if self.diagsLeft(col_index, row_index):
+                result = self.enumDiagLeft(col_index, row_index)
+                comp_adv += result[0]
+                comp_threats += result[1]
+                player_adv += result[2]
+                player_threats += result[3]
+            col_index += 1
+        col_index = self.N - 1
+        row_index = depth
+        #start counting left diag vals at left most column from depth to self.N - 2
+        while row_index < self.N:
+            if self.diagsLeft(col_index, row_index):
+                result = self.enumDiagRight(col_index, row_index)
+                comp_adv += result[0]
+                comp_threats += result[1]
+                player_adv += result[2]
+                player_threats += result[3]
+            row_index += 1
+        return (comp_adv, comp_threats, player_adv, player_threats)
     
     def enumDiagRight(self, col, row) -> tuple:
         col_index = col
@@ -493,9 +604,8 @@ class Board:
         if counter != 0:
             diag_list.append(counter)
             gauss_list.append(gauss_counter)
-        return self.enumDiagHelper(diag_list, gauss_list)
 
-    #col_index -= 1 row_index -= 1 col_index >= 0 and row_index >= depth
+        return self.enumDiagHelper(diag_list, gauss_list)
 
     def enumDiagLeft(self, col, row) -> tuple:
         col_index = col
@@ -504,7 +614,7 @@ class Board:
         gauss_list = deque()
         counter = 0
         gauss_counter = 0
-        while col_index < self.N and row_index >= 0:
+        while col_index >= 0 and row_index >= 0:
             #if spot is empty
             if self.board[row_index][col_index] == ' ':
                 #if player or computer pieces have been counted
@@ -536,17 +646,16 @@ class Board:
                 else:
                     counter += 1
                     gauss_counter += Board.gaussian_board[row_index][col_index]
-            col_index += 1
+            col_index -= 1
             row_index -= 1
 
         if counter != 0:
             diag_list.append(counter)
             gauss_list.append(gauss_counter)
+
         return self.enumDiagHelper(diag_list, gauss_list)
  
     def enumDiagHelper(self, diag_list, gauss_list) -> tuple:
-        print(diag_list)
-        print(gauss_list)
         comp_adv = 0
         player_adv = 0
         comp_threats = 0
@@ -554,30 +663,52 @@ class Board:
         zeros = 0
         counter = 0
         adv = 0
-        #count player and computer threats
+
+        #count player and computer threats going right
         for k in range(len(diag_list)):
+
             # if last index do nothing
             if k == len(diag_list) - 1:
                 pass
             # if second to last index
             elif k == len(diag_list) - 2:
-                if diag_list[k + 1] == 0:
-                    if diag_list[k] > 0 and diag_list[k] + 1 >= self.M:
+                #check space right threats
+                if diag_list[k] > 0 and diag_list[k + 1] == 0:
+                    if diag_list[k] + 1 >= self.M:
                         comp_threats += 1
-                    elif diag_list[k] < 0 and abs(diag_list[k] - 1) >= self.M:
-                        player_threats += 1
-                elif diag_list[k] == 0:
-                    if diag_list[k + 1] > 0 and diag_list[k + 1] + 1 >= self.M:
-                        comp_threats += 1
-                    elif diag_list[k + 1] < 0 and abs(diag_list[k + 1] - 1) >= self.M:
+                elif diag_list[k] < 0 and diag_list[k + 1] == 0:
+                    if abs(diag_list[k]) + 1 >= self.M:
                         player_threats += 1
             # if not second to last or last index
             else:
-                if diag_list[k + 1] == 0 and abs(diag_list[k] + diag_list[k + 2]) >= self.M:
-                    if diag_list[k] > 0:
+                #check space between threats
+                if diag_list[k] > 0 and diag_list[k + 2] > 0 and diag_list[k + 1] == 0:
+                    if diag_list[k] + diag_list[k + 2] + 1 >= self.M:
                         comp_threats += 1
-                    else:
+                elif diag_list[k] < 0 and diag_list[k + 2] < 0 and diag_list[k + 1] == 0:
+                    if abs(diag_list[k] + diag_list[k + 2]) + 1 >= self.M:
                         player_threats += 1
+                #check space right threats
+                elif diag_list[k] > 0 and diag_list[k + 1] == 0:
+                    if diag_list[k] + 1 >= self.M:
+                        comp_threats += 1
+                elif diag_list[k] < 0 and diag_list[k + 1] == 0:
+                    if abs(diag_list[k]) + 1 >= self.M:
+                        player_threats += 1
+        #count player and computer threats going left
+        for k in range(len(diag_list) - 1, -1, -1):
+            #if last index
+            if k == 0:
+                pass
+            #if not last index
+            else:
+                if diag_list[k] > 0 and diag_list[k - 1] == 0:
+                    if diag_list[k] + 1 >= self.M:
+                        comp_threats += 1
+                elif diag_list[k] < 0 and diag_list[k - 1] == 0:
+                    if abs(diag_list[k]) + 1 >= self.M:
+                        player_threats += 1
+
 
         #check player adv
         for i in range(len(diag_list)):
@@ -626,15 +757,21 @@ class Board:
         counter = 0
         zeros = 0
         adv = 0
-
-
         return (comp_adv, comp_threats, player_adv, player_threats)
 
-    def numDiagsRight(self, row, col):
-        min(row, self.N - col - 1)
+    def diagsRight(self, col, row) -> bool:
+        num = min(row, self.N - col - 1)
+        if num + 1 >= self.M:
+            return True
+        else:
+            return False
     
-    def numDiagsLeft(self, row, col):
-        min(row, col)
+    def diagsLeft(self, col, row):
+        num = min(row, col)
+        if num + 1 >= self.M:
+            return True
+        else:
+            return False
 
 
             
