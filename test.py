@@ -17,14 +17,12 @@ def main():
     while True:
         if board.H == 0:
             board.printBoard()
-            print(board.enumBoard())
             move = int(input('Please enter the column (integer) to make your move: '))
             if handleMove(board, move):
                 board.printBoard()
                 handleWin(board.winner)
         elif board.H == 1:
             board.printBoard()
-            print(board.enumBoard())
             move = int(input('Please enter the column (integer) to make your move: '))
             if handleMove(board, move):
                 board.printBoard()

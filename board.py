@@ -28,8 +28,9 @@ class Board:
         self.board = [[' ' for j in range(self.N)] for i in range(self.N)]
 
     #creates deepcopy of existing board
-    def createCopyBoard(self, board):
+    def createCopyBoard(self, board, board_cols):
         self.board = deepcopy(board)
+        self.board_cols = deepcopy(board_cols)
 
     #prints board to console
     def printBoard(self):
@@ -69,6 +70,8 @@ class Board:
         else:
             self.board_cols[move - 1] -= 1
             self.H = self.H ^ 1
+            if self.checkDraw():
+                return True
             return False
 
     def checkWin(self, move) -> bool:
@@ -79,6 +82,13 @@ class Board:
         elif self.checkCol(col, row):
             return True
         elif self.checkDiag(col, row):
+            return True
+        else:
+            return False
+
+    def checkDraw(self) -> bool:
+        if sum(self.board_cols) == 0:
+            self.winner = 2
             return True
         else:
             return False
@@ -195,14 +205,12 @@ class Board:
             return 10000
         elif self.winner == 0:
             return -10000
+        elif self.winner == 2:
+            return 0
 
         rows_adv = self.enumRows()
         diags_adv = self.enumDiags(rows_adv[4])
         cols_adv = self.enumCols()
-
-        print(f'rows comp threats {rows_adv[1]} rows player threats {rows_adv[3]}')
-        print(f'cols comp threats {cols_adv[1]} cols player threats {cols_adv[3]}')
-        print(f'diags comp threats {diags_adv[1]} diags player threats {diags_adv[3]}')
 
         if self.H == 0 and (rows_adv[3] > 0 or diags_adv[3] > 0 or cols_adv[3] > 0):
             return -9999
@@ -334,7 +342,6 @@ class Board:
                 gauss_list.append(comp_gauss)
                 comp_gauss = 0
 
-            print(row_list)
             #count player and computer threats going right
             for k in range(len(row_list)):
                 # if last index do nothing
