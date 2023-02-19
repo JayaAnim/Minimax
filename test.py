@@ -1,5 +1,6 @@
 import argparse
 from board import Board
+from minimax import generateMove
 
 def main():
     parser = argparse.ArgumentParser(description='ConnectM game')
@@ -22,9 +23,8 @@ def main():
                 board.printBoard()
                 handleWin(board.winner)
         elif board.H == 1:
-            board.printBoard()
-            move = int(input('Please enter the column (integer) to make your move: '))
-            if handleMove(board, move):
+            move = generateMove(board)
+            if board.placeMove(move):
                 board.printBoard()
                 handleWin(board.winner)
     
@@ -67,6 +67,10 @@ def handleWin(H):
         print("║  The player has won! ║")
         print("╚══════════════════════╝")
         quit()
+    elif H == 2:
+        print("╔══════════════════════╗")
+        print("║  The result is a tie ║")
+        print("╚══════════════════════╝")
     else:
         print('Critical error: Invalid winner')
         print('Program will now close')

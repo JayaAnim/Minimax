@@ -3,29 +3,21 @@ from copy import deepcopy
 
 class Node:
     def __init__(self, possible_moves: list, current_moves: list, depth, init_board: Board):
-        #static evaluation of board
-        self.utility = 0
+        #initial board state for bottom of tree
+        self.init_board = None
         #child nodes
         self.child_nodes = []
         #keeps track of if node ends before end of depth
         self.final_node = False
+        #current move
+        self.moves = 0
 
 
         #if node is at bottom of tree
         if depth == 0 or sum(possible_moves) == 0:
             self.final_node = True
-            #create a deepcopy of current state of the board
-            board = Board(init_board.N, init_board.M, init_board.H)
-            board.createCopyBoard(init_board.board, init_board.board_cols)
-            #place moves onto new board
-            for move in current_moves:
-                #if a move results in a win, evaluate the board and return
-                if board.placeMove(move):
-                    self.utility = board.enumBoard()
-                    return
-            #if no moves resulted in a win, evaluate the board and return
-            self.utility = board.enumBoard()
-            return
+            self.init_board = init_board
+            self.moves = current_moves
         #if node is not at bottom of the tree
         else:
             #generate child nodes
@@ -34,39 +26,67 @@ class Node:
                 if possible_moves[i] != 0:
                     #if possible, create a deep copy of current moves and possible moves, then modify each to reflect move
                     new_current_moves = deepcopy(current_moves)
-                    new_current_moves.append(possible_moves[i])
+                    new_current_moves.append(i + 1)
                     new_possible_moves = deepcopy(possible_moves)
                     new_possible_moves[i] -= 1
                     #append child nodes list with new node of new changes
                     self.child_nodes.append(Node(new_possible_moves, new_current_moves, depth - 1, init_board))
 
-def generateMove(init_board: Board) -> int:
-    head_node = Node(init_board.board_cols, [], 3, init_board)
-    result = minimax(head_node, 3, True)
-    return result
+    def getUtilityAndMove(self) -> tuple:
+            #create a deepcopy of current state of the board
+            board = Board(self.init_board.N, self.init_board.M, self.init_board.H)
+            board.createCopyBoard(self.init_board.board, self.init_board.board_cols)
+            #place moves onto new board
+            for move in self.moves:
+                #if a move results in a win, evaluate the board and return
+                if not board.validateMove(move):
+                    print('critical error')
+                if board.placeMove(move):
+                    utility = board.enumBoard()
+                    return (utility, self.moves[0])
+            #if no moves resulted in a win, evaluate the board and return
+            utility = board.enumBoard()
+            return (utility, self.moves[0])
 
-#maximizingComputer means it is computer's (H == 1) turn
-def minimax(node: Node, depth, maximizingComputer):
+
+def generateMove(init_board: Board) -> int:
+    head_node = Node(init_board.board_cols, [], 6, init_board)
+    utility, move = minimax(head_node, 6, float('-inf'), float('inf'), True)
+    return move
+
+def minimax(node: Node, depth, alpha, beta, maximizingComputer):
     if depth == 0 or node.final_node:
-        return node.utility
+        utility, move = node.getUtilityAndMove()
+        return utility, move
 
     if maximizingComputer:
         maxEval = float('-inf')
+        maxMove = None
         for child_node in node.child_nodes:
-            eval = minimax(child_node, depth - 1, False)
-            maxEval = max(maxEval, eval)
-        return maxEval
+            eval, move = minimax(child_node, depth - 1, alpha, beta, False)
+            if eval > maxEval:
+                maxEval = eval
+                maxMove = move
+            if eval > alpha:
+                alpha = eval
+            if beta <= alpha:
+                break
+        return maxEval, maxMove
     
     else:
         minEval = float('inf')
+        minMove = None
         for child_node in node.child_nodes:
-            eval = minimax(child_node, depth - 1, True)
-            minEval = min(minEval, eval)
-        return minEval
-    
-board = Board(3, 3, 1)
-board.createNewBoard()
-generateMove(board)
+            eval, move = minimax(child_node, depth - 1, alpha, beta, True)
+            if eval < minEval:
+                minEval = eval
+                minMove = move
+            if eval < beta:
+                beta = eval
+            if beta <= alpha:
+                break
+        return minEval, minMove
+
 
 
 
