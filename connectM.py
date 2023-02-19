@@ -1,7 +1,6 @@
-"""
-import numpy as np
 import argparse
 from board import Board
+from minimax import generateMove
 
 def main():
     parser = argparse.ArgumentParser(description='ConnectM game')
@@ -14,7 +13,7 @@ def main():
     params = handleParameters(args.N, args.M, args.H)
     board = Board(params[0], params[1], params[2])
     board.createNewBoard()
-    guassian_board = genGaussianBoard(parmas[0])
+
     
     while True:
         if board.H == 0:
@@ -22,10 +21,12 @@ def main():
             move = int(input('Please enter the column (integer) to make your move: '))
             if handleMove(board, move):
                 board.printBoard()
-                handleWin(board.H)
+                handleWin(board.winner)
         elif board.H == 1:
-            board.H = 0
-
+            move = generateMove(board)
+            if board.placeMove(move):
+                board.printBoard()
+                handleWin(board.winner)
     
     
 
@@ -66,6 +67,10 @@ def handleWin(H):
         print("║  The player has won! ║")
         print("╚══════════════════════╝")
         quit()
+    elif H == 2:
+        print("╔══════════════════════╗")
+        print("║  The result is a tie ║")
+        print("╚══════════════════════╝")
     else:
         print('Critical error: Invalid winner')
         print('Program will now close')
@@ -73,4 +78,3 @@ def handleWin(H):
 
 if __name__ == '__main__':
     main()
-"""
