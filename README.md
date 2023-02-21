@@ -10,27 +10,30 @@ This program has been tested against human players and an online connect 4 AI, a
 
 # Installation
 
-To get started with this project, simply activate the virtual environment that comes with the repository:
+To install the necessary dependencies for this project, you can use pip with the included requirements.txt file:
 
 First, ensure that you have Python 3 installed on your system. If you do not have Python 3 installed, you can download it from the official website: https://www.python.org/downloads/
 
-Navigate to the project directory in your terminal or command prompt.
+Next, create a new virtual environment using the venv module that comes with Python 3:
+    python3 -m venv env
 
-Activate the virtual environment using the following command:
+Activate the virtual environment:
+    On macOS and Linux:
+        source env/bin/activate
+    On Windows:
+        .\env\Scripts\activate
 
-On macOS and Linux: 
-    source minimaxEnv/bin/activate
+Install the dependencies using the following command:
+    pip install -r requirements.txt
 
-On Windows: 
-    .\minimaxEnv\Scripts\activate
+This will install all the required packages specified in the requirements.txt file.
 
-Once the virtual environment is activated, you can start working with the project. All the necessary dependencies are included in the virtual environment, so you don't need to install anything.
-
-Note: If you want to use a different Python interpreter or package manager, you can create a new virtual environment and install the dependencies using the requirements.txt file (pip install -r requirements.txt).
+Note: If you are using a different package manager like Anaconda or Miniconda, the commands may be slightly different.
 
 # Usage
 
-To begin using the program simply type the command python3 connectM.py N M H. 
+To start the program:
+    python3 connectM.py N M H
 
 1) N will be a number that is greater than or equal to 3 and less than or equal to 10. 
    N is the board size (Example: 10 will be a 10x10 board)
@@ -45,7 +48,7 @@ To play the terminal will ask you for your move. Moves will be a integer that co
 
 The computer may take longer than expected to return a move on larger boards, however, moves will be returned in no more than 2 minutes on larger boards. Please be patient.
 
-Once the computer or player has won, or the a tie has occurred and no more valid moves are left, a prompt anouncing the winner will appear and the program will quit. The program must be restarted to play again.
+Once the computer or player has won, or a tie has occurred and no more valid moves are left, a prompt anouncing the winner will appear and the program will quit. The program must be restarted to play again.
 
 # Example
 
