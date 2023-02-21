@@ -33,25 +33,35 @@ class Node:
                     self.child_nodes.append(Node(new_possible_moves, new_current_moves, depth - 1, init_board))
 
     def getUtilityAndMove(self) -> tuple:
+            #keeps track of number of moves made to get to win, to incentivize early wins
+            numMoves = 0
             #create a deepcopy of current state of the board
             board = Board(self.init_board.N, self.init_board.M, self.init_board.H)
             board.createCopyBoard(self.init_board.board, self.init_board.board_cols)
             #place moves onto new board
             for move in self.moves:
+                numMoves += 1
                 #if a move results in a win, evaluate the board and return
                 if not board.validateMove(move):
                     print('critical error')
                 if board.placeMove(move):
                     utility = board.enumBoard()
-                    return (utility, self.moves[0])
+                    if numMoves != 0:
+                        return (utility / numMoves, self.moves[0])
+                    else:
+                        return (utility, self.moves[0])
             #if no moves resulted in a win, evaluate the board and return
             utility = board.enumBoard()
-            return (utility, self.moves[0])
+            if numMoves != 0:
+                return (utility / numMoves, self.moves[0])
+            else:
+                return (utility, self.moves[0])
 
 
 def generateMove(init_board: Board) -> int:
-    head_node = Node(init_board.board_cols, [], 6, init_board)
-    utility, move = minimax(head_node, 6, float('-inf'), float('inf'), True)
+    depth = init_board.getDepthToSearch()
+    head_node = Node(init_board.board_cols, [], depth, init_board)
+    utility, move = minimax(head_node, depth, float('-inf'), float('inf'), True)
     return move
 
 def minimax(node: Node, depth, alpha, beta, maximizingComputer):

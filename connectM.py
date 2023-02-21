@@ -24,6 +24,7 @@ def main():
                 handleWin(board.winner)
         elif board.H == 1:
             move = generateMove(board)
+            print(f'Computer places piece in column {move}')
             if board.placeMove(move):
                 board.printBoard()
                 handleWin(board.winner)
@@ -74,7 +75,7 @@ def handleWin(H):
     else:
         print('Critical error: Invalid winner')
         print('Program will now close')
-        quit()
+    quit()
 
 if __name__ == '__main__':
     main()

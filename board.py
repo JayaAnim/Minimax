@@ -249,6 +249,61 @@ class Board:
 
         #adjust for
         return total_utility
+    """
+    def enumPrint(self):
+        if self.winner == 1:
+            return 10000
+        elif self.winner == 0:
+            return -10000
+        elif self.winner == 2:
+            return 0
+
+        rows_adv = self.enumRows()
+        diags_adv = self.enumDiags(rows_adv[4])
+        cols_adv = self.enumCols()
+
+        print(f'rows: computer - adv {rows_adv[0]} - threats {rows_adv[1]} player - adv {rows_adv[2]} - threats {rows_adv[3]}')
+        print(f'columns: computer -adv {cols_adv[0]} - threats {cols_adv[1]} player - adv {cols_adv[2]} - threats {cols_adv[3]}')
+        print(f'diagonals: computer - adv {diags_adv[0]} - threats {diags_adv[1]} player - adv {diags_adv[2]} - threats {diags_adv[3]}')
+
+        if self.H == 0 and (rows_adv[3] > 0 or diags_adv[3] > 0 or cols_adv[3] > 0):
+            return -9999
+        elif self.H == 1 and (rows_adv[1] > 0 or diags_adv[1] > 0 or cols_adv[1] > 0):
+            return 9999
+
+        # Get the computer and player advantages for each tuple
+        rows_comp_adv, rows_play_adv = rows_adv[0], rows_adv[2]
+        diags_comp_adv, diags_play_adv = diags_adv[0], diags_adv[2]
+        cols_comp_adv, cols_play_adv = cols_adv[0], cols_adv[2]
+
+        if rows_adv[3] > 0 or diags_adv[3] > 0 or cols_adv[3] > 0:
+            if self.H == 0:
+                rows_play_adv *= 1.25 ** rows_adv[3]
+                diags_play_adv *= 1.25 ** diags_adv[3]
+                cols_play_adv *= 1.25 ** cols_adv[3]
+            else:
+                rows_comp_adv *= 1.25 ** rows_adv[1]
+                diags_comp_adv *= 1.25 ** diags_adv[1]
+                cols_comp_adv *= 1.25 ** cols_adv[1]
+
+        # Calculate total utility with normalized weights
+        total_weight = abs(rows_comp_adv) + abs(rows_play_adv) + abs(diags_comp_adv) + abs(diags_play_adv) + abs(cols_comp_adv) + abs(cols_play_adv)
+        cols_weight = abs(cols_comp_adv) + abs(cols_play_adv)
+        rows_weight = abs(rows_comp_adv) + abs(rows_play_adv)
+        diags_weight = abs(diags_comp_adv) + abs(diags_play_adv)
+
+        if cols_weight == 0:
+            cols_weight = float('inf')
+        if rows_weight == 0:
+            rows_weight = float('inf')
+        if diags_weight == 0:
+            diags_weight = float('inf')
+
+        total_utility = (cols_comp_adv*0.475/cols_weight + rows_comp_adv*0.325/rows_weight + diags_comp_adv*0.2/diags_weight + cols_play_adv*0.475/cols_weight + rows_play_adv*0.325/rows_weight + diags_play_adv*0.2/diags_weight)*total_weight
+
+        #adjust for
+        return total_utility
+    """
 
 
     #returns player row advantage, computer row advantage, number of threats each has in the rows, and depth of placed pieces
@@ -320,8 +375,13 @@ class Board:
                         computer_pieces = 0
                         gauss_list.append(comp_gauss)
                         comp_gauss = 0
-                    row_list.append(0)
-                    gauss_list.append(0)
+                    #check if valid zero
+                    if i == self.N - 1:
+                        row_list.append(0)
+                        gauss_list.append(0)
+                    elif self.board[i + 1][j] != ' ':
+                        row_list.append(0)
+                        gauss_list.append(0)
 
             # if no pieces encountered break
             if not encountered:
@@ -394,7 +454,6 @@ class Board:
             player_adv += row_enum[1]
 
         return (comp_adv, computer_threats, player_adv, player_threats, depth)
-
 
     def enumRowHelper(self, row_list, gauss_list) -> tuple:
         #temporary variable to store number of pieces found
@@ -580,8 +639,13 @@ class Board:
                 if counter != 0:
                     diag_list.append(counter)
                     gauss_list.append(gauss_counter)
-                diag_list.append(0)
-                gauss_list.append(0)
+                #check if valid zero
+                if row_index == self.N - 1:
+                    diag_list.append(0)
+                    gauss_list.append(0)
+                elif self.board[row_index + 1][col_index] != ' ':
+                    diag_list.append(0)
+                    gauss_list.append(0)
                 counter = 0
                 gauss_counter = 0
             #if spot is player
@@ -628,8 +692,13 @@ class Board:
                 if counter != 0:
                     diag_list.append(counter)
                     gauss_list.append(gauss_counter)
-                diag_list.append(0)
-                gauss_list.append(0)
+                #check if valid zero
+                if row_index == self.N - 1:
+                    diag_list.append(0)
+                    gauss_list.append(0)
+                elif self.board[row_index + 1][col_index] != ' ':
+                    diag_list.append(0)
+                    gauss_list.append(0)
                 counter = 0
                 gauss_counter = 0
             #if spot is player
@@ -779,6 +848,31 @@ class Board:
             return True
         else:
             return False
+
+    #returns depth to search for minimax
+    def getDepthToSearch(self):
+        #temporary copy of possible moves
+        temp_cols = deepcopy(self.board_cols)
+        #depth of search
+        depth = 1
+        #number of minimax calls at depth
+        function_calls = self.depthToSearchHelper(temp_cols)
+
+        while function_calls <= 1e5:
+            possibilities = self.depthToSearchHelper(temp_cols)
+            if possibilities == 0:
+                return depth + 1
+            function_calls *= possibilities
+            depth += 1
+        return depth
+
+    def depthToSearchHelper(self, temp_cols: list) -> int:
+        possibilities = 0
+        for i in range(len(temp_cols)):
+            if temp_cols[i] != 0:
+                possibilities += 1
+                temp_cols[i] -= 1
+        return possibilities
 
 
             
