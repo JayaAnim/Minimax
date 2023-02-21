@@ -52,6 +52,6 @@ Once the computer or player has won, or a tie has occurred and no more valid mov
 
 # Example
 
-![Example run](https://drive.google.com/file/d/1jigU0HzaLGKQtSVVX0CJf4vb4-522EeV/view?usp=share_link)
+![Example run](https://github.com/JayaAnim/Minimax/blob/main/connectMExample.png)
 
 
