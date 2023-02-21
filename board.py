@@ -864,6 +864,8 @@ class Board:
                 return depth + 1
             function_calls *= possibilities
             depth += 1
+        if depth > 7:
+            return 7
         return depth
 
     def depthToSearchHelper(self, temp_cols: list) -> int:
