@@ -60,8 +60,8 @@ class Node:
 
 def generateMove(init_board: Board) -> int:
     depth = init_board.getDepthToSearch()
-    head_node = Node(init_board.board_cols, [], depth, init_board)
-    utility, move = minimax(head_node, depth, float('-inf'), float('inf'), True)
+    head_node = Node(init_board.board_cols, [], 6, init_board)
+    utility, move = minimax(head_node, 6, float('-inf'), float('inf'), True)
     return move
 
 def minimax(node: Node, depth, alpha, beta, maximizingComputer):
